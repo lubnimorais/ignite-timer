@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { createContext, useCallback, useEffect, useState } from 'react';
 
 import { useForm, SubmitHandler } from 'react-hook-form';
 
@@ -29,48 +29,61 @@ interface ICycle {
   finishedDate?: Date;
 }
 
+interface ICycleContextData {
+  activeCycle: ICycle | undefined;
+  activeCycleId: string | null;
+  makeCurrentCycleAsFinished: () => void;
+}
+
+const CyclesContext = createContext({} as ICycleContextData);
+
 const Home = () => {
   const [cycles, setCycles] = useState<ICycle[]>([]);
   const [activeCycleId, setActiveCycleId] = useState<string | null>(null);
 
   // const { errors } = formState;
-  let isSubmitDisabled = true;
-  const task = watch('task');
-  if (task) {
-    isSubmitDisabled = !task.trim();
-  }
+  // const isSubmitDisabled = true;
+
+  // const task = watch('task');
+  // if (task) {
+  //   isSubmitDisabled = !task.trim();
+  // }
 
   const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId);
 
-  const currentSeconds = activeCycle ? totalSeconds - amountSecondsPassed : 0;
-
-  const minutosAmount = Math.floor(currentSeconds / 60);
-  const secondsAmount = currentSeconds % 60;
-
-  const minutes = String(minutosAmount).padStart(2, '0');
-  const seconds = String(secondsAmount).padStart(2, '0');
-
   // FUNCTIONS
-  const handleCreateNewCycle: SubmitHandler<TNewCycleFormData> = useCallback(
-    ({ task, minutesAmount }) => {
-      const id = String(new Date().getTime());
+  const makeCurrentCycleAsFinished = useCallback(() => {
+    setCycles((oldState) =>
+      oldState.map((cycle) => {
+        if (cycle.id === activeCycleId) {
+          return { ...cycle, finishedDate: new Date() };
+        } else {
+          return cycle;
+        }
+      }),
+    );
+  }, [activeCycleId]);
 
-      const newCycle: ICycle = {
-        id,
-        task,
-        minutesAmount,
-        startDate: new Date(),
-      };
+  // const handleCreateNewCycle: SubmitHandler<TNewCycleFormData> = useCallback(
+  //   ({ task, minutesAmount }) => {
+  //     const id = String(new Date().getTime());
 
-      setCycles((oldState) => [...oldState, newCycle]);
-      setActiveCycleId(id);
-      setAmountSecondsPassed(0);
+  //     const newCycle: ICycle = {
+  //       id,
+  //       task,
+  //       minutesAmount,
+  //       startDate: new Date(),
+  //     };
 
-      reset();
-      // console.log('Minutes Amount: ', minutesAmount);
-    },
-    [reset],
-  );
+  //     setCycles((oldState) => [...oldState, newCycle]);
+  //     setActiveCycleId(id);
+  //     setAmountSecondsPassed(0);
+
+  //     reset();
+  //     // console.log('Minutes Amount: ', minutesAmount);
+  //   },
+  //   [reset],
+  // );
 
   const handleInterruptCycle = useCallback(() => {
     setCycles((oldState) =>
@@ -88,18 +101,16 @@ const Home = () => {
   }, [activeCycleId]);
   // FUNCTIONS
 
-  useEffect(() => {
-    if (activeCycle) {
-      document.title = `Ignite Timer [${minutes}:${seconds}]`;
-    }
-  }, [activeCycle, minutes, seconds]);
-
   return (
     <HomeContainer>
-      <form onSubmit={handleSubmit(handleCreateNewCycle)}>
-        <NewCycleForm />
+      <form /* onSubmit={handleSubmit(handleCreateNewCycle)} */>
+        <CyclesContext.Provider
+          value={{ activeCycle, activeCycleId, makeCurrentCycleAsFinished }}
+        >
+          {/* <NewCycleForm /> */}
 
-        <Countdown />
+          <Countdown />
+        </CyclesContext.Provider>
 
         {activeCycle ? (
           <StopCountDownButton type="button" onClick={handleInterruptCycle}>
@@ -107,7 +118,7 @@ const Home = () => {
             Interromper
           </StopCountDownButton>
         ) : (
-          <StartCountDownButton disabled={isSubmitDisabled} type="submit">
+          <StartCountDownButton /* disabled={isSubmitDisabled} */ type="submit">
             <Play size={24} />
             Começar
           </StartCountDownButton>
@@ -117,4 +128,4 @@ const Home = () => {
   );
 };
 
-export { Home };
+export { Home, CyclesContext };
