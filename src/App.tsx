@@ -6,6 +6,7 @@ import { Router } from './routes';
 
 import { defaultThemes } from './styles/themes/default';
 import { GlobalStyle } from './styles/global';
+import { CyclesContextProvider } from './contexts/CyclesContext';
 
 function App() {
   return (
@@ -13,7 +14,9 @@ function App() {
       <GlobalStyle />
 
       <BrowserRouter>
-        <Router />
+        <CyclesContextProvider>
+          <Router />
+        </CyclesContextProvider>
       </BrowserRouter>
     </ThemeProvider>
   );
