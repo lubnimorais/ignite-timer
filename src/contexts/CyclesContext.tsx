@@ -80,7 +80,7 @@ const CyclesContextProvider = ({ children }: ICyclesContextProps) => {
     setCycles((oldState) =>
       oldState.map((cycle) => {
         if (cycle.id === activeCycleId) {
-          return { ...cycle, finishedDate: new Date() };
+          return { ...cycle, interruptedDate: new Date() };
         } else {
           return cycle;
         }

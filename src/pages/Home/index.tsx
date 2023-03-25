@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useCallback, useContext } from 'react';
 
 import { useForm, FormProvider } from 'react-hook-form';
 
@@ -18,11 +18,6 @@ import {
   StopCountDownButton,
 } from './styles';
 
-// type INewCycleFormData = {
-//   task: string;
-//   minutesAmount: number;
-// };
-
 const newCycleFormValidationSchema = zod.object({
   task: zod.string().min(1, 'Informe a tarefa'),
   minutesAmount: zod
@@ -31,13 +26,13 @@ const newCycleFormValidationSchema = zod.object({
     .max(60, 'O intervalor precisa ser de no máximo 60 minutos'),
 });
 
-type TNewCycleFormData = zod.infer<typeof newCycleFormValidationSchema>;
+type INewCycleFormData = zod.infer<typeof newCycleFormValidationSchema>;
 
 const Home = () => {
   const { activeCycle, createNewCycle, interruptCurrentCycle } =
     useContext(CyclesContext);
 
-  const newCycleForm = useForm<TNewCycleFormData>({
+  const newCycleForm = useForm<INewCycleFormData>({
     resolver: zodResolver(newCycleFormValidationSchema),
     defaultValues: {
       task: '',
@@ -45,7 +40,7 @@ const Home = () => {
     },
   });
 
-  const { handleSubmit, watch } = newCycleForm;
+  const { handleSubmit, watch, reset } = newCycleForm;
 
   // const { errors } = formState;
   let isSubmitDisabled = true;
@@ -56,12 +51,19 @@ const Home = () => {
   }
 
   // FUNCTIONS
+  const handleCreateNewCycle = useCallback(
+    ({ task, minutesAmount }: INewCycleFormData) => {
+      createNewCycle({ task, minutesAmount });
 
+      reset();
+    },
+    [createNewCycle, reset],
+  );
   // FUNCTIONS
 
   return (
     <HomeContainer>
-      <form onSubmit={handleSubmit(createNewCycle)}>
+      <form onSubmit={handleSubmit(handleCreateNewCycle)}>
         <FormProvider {...newCycleForm}>
           <NewCycleForm />
         </FormProvider>
