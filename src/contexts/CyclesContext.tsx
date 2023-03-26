@@ -1,4 +1,10 @@
-import { createContext, ReactNode, useCallback, useState } from 'react';
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useReducer,
+  useState,
+} from 'react';
 
 interface ICreateCycleData {
   task: string;
@@ -32,7 +38,14 @@ interface ICyclesContextProps {
 const CyclesContext = createContext({} as ICycleContextData);
 
 const CyclesContextProvider = ({ children }: ICyclesContextProps) => {
-  const [cycles, setCycles] = useState<ICycle[]>([]);
+  const [cycles, dispatch] = useReducer((state: ICycle[], action: any) => {
+    if (action.type === 'ADD_NEW_CYCLE') {
+      return [...state, action.payload.newCycle];
+    }
+
+    return state;
+  }, []);
+
   const [activeCycleId, setActiveCycleId] = useState<string | null>(null);
   const [amountSecondsPassed, setAmountSecondsPassed] = useState(0);
 
@@ -40,15 +53,22 @@ const CyclesContextProvider = ({ children }: ICyclesContextProps) => {
 
   // FUNCTIONS
   const makeCurrentCycleAsFinished = useCallback(() => {
-    setCycles((oldState) =>
-      oldState.map((cycle) => {
-        if (cycle.id === activeCycleId) {
-          return { ...cycle, finishedDate: new Date() };
-        } else {
-          return cycle;
-        }
-      }),
-    );
+    dispatch({
+      type: 'MARK_CURRENT_CYCLE_AS_FINISHED',
+      payload: {
+        activeCycleId,
+      },
+    });
+
+    // setCycles((oldState) =>
+    //   oldState.map((cycle) => {
+    //     if (cycle.id === activeCycleId) {
+    //       return { ...cycle, finishedDate: new Date() };
+    //     } else {
+    //       return cycle;
+    //     }
+    //   }),
+    // );
   }, [activeCycleId]);
 
   const setSecondsPassed = useCallback((seconds: number) => {
@@ -66,7 +86,14 @@ const CyclesContextProvider = ({ children }: ICyclesContextProps) => {
         startDate: new Date(),
       };
 
-      setCycles((oldState) => [...oldState, newCycle]);
+      dispatch({
+        type: 'ADD_NEW_CYCLE',
+        payload: {
+          newCycle,
+        },
+      });
+
+      // setCycles((oldState) => [...oldState, newCycle]);
       setActiveCycleId(id);
       setAmountSecondsPassed(0);
 
@@ -77,15 +104,22 @@ const CyclesContextProvider = ({ children }: ICyclesContextProps) => {
   );
 
   const interruptCurrentCycle = useCallback(() => {
-    setCycles((oldState) =>
-      oldState.map((cycle) => {
-        if (cycle.id === activeCycleId) {
-          return { ...cycle, interruptedDate: new Date() };
-        } else {
-          return cycle;
-        }
-      }),
-    );
+    dispatch({
+      type: 'INTERRUPT_CURRENT_CYCLE',
+      payload: {
+        activeCycleId,
+      },
+    });
+
+    // setCycles((oldState) =>
+    //   oldState.map((cycle) => {
+    //     if (cycle.id === activeCycleId) {
+    //       return { ...cycle, interruptedDate: new Date() };
+    //     } else {
+    //       return cycle;
+    //     }
+    //   }),
+    // );
 
     setActiveCycleId(null);
     document.title = 'Ignite Timer';
